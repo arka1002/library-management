@@ -19,7 +19,7 @@ class Book(models.Model):
 class Student(models.Model):
     roll_no = models.CharField(max_length=100, primary_key=True)
     first_name = models.CharField(max_length=500)
-    middle_name = models.CharField(max_length=500)
+    middle_name = models.CharField(max_length=500, blank=True)
     last_name = models.CharField(max_length=500)
 
     def __str__(self):

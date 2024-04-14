@@ -1,0 +1,9 @@
+.single-row {
+    border-bottom: solid gray 2px;
+    display: flex;
+    gap: 50px;
+}
+
+.special-class {
+    flex-basis: 88px;
+}
