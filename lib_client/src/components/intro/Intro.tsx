@@ -1,6 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formErrorMessages, type Student } from "../../utils/types.js";
+import {
+  type studentFormErrorMessages,
+  type Student,
+  type Books_not_returned_list,
+} from "../../utils/types.js";
 import styles from "./Intro.module.css";
 import { FormEvent, useRef, useState } from "react";
 import { STUDENT_FORM } from "../../utils/utilities.js";
@@ -30,41 +34,77 @@ const Intro = () => {
     isError: is_edit_error,
     isSuccess: is_edit_success,
     error: edit_error,
-    mutate: mut_op
+    mutate: mut_op,
   } = useMutation({
-    mutationFn: (body: any) => fetch(`/list/students/${student_roll}/edit`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+    mutationFn: (body: any) =>
+      fetch(`/list/students/${student_roll}/edit`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["student detail"]
+        queryKey: ["student detail"],
       });
       let notes_form = first_name_field.current?.parentNode
         .parentNode as HTMLFormElement;
       notes_form.reset();
       first_name_field.current?.focus();
-    }
+    },
   });
 
   const {
     isPending: is_delete_pending,
     isError: is_delete_error,
     error: delete_error,
-    mutate: mut_delete
+    mutate: mut_delete,
   } = useMutation({
-    mutationFn: () => fetch(`/list/students/${student_roll}/delete`, {
-      method: "POST"
-    }),
+    mutationFn: () =>
+      fetch(`/list/students/${student_roll}/delete`, {
+        method: "POST",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["List of students"]
+        queryKey: ["List of students"],
       });
       navigate("/details/students");
-    }
-  })
+    },
+  });
 
-  let [errorState, setErrorState] = useState<formErrorMessages>({
+  let {
+    isPending: is_books_notreturn_pending,
+    isError: is_books_notreturn_err,
+    isSuccess: is_books_notreturn_passed,
+    data: books_not_returned,
+    error: books_not_returned_error,
+  } = useQuery({
+    queryKey: ["books not returned"],
+    queryFn: (): Promise<Books_not_returned_list> =>
+      fetch(`/list/account/not-returned/${student_roll}/`).then((res) =>
+        res.json()
+      ),
+  });
+
+  let {
+    isPending: is_mark_as_returned_pending,
+    isError: is_mark_as_returned_err,
+    isSuccess: is_mark_as_returned_passed,
+    mutate: mark_as_returned_mut,
+    error: mark_as_returned_err,
+  } = useMutation({
+    mutationFn: (body: any) =>
+      fetch("/list/account/returned/", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }).then((res) => res.text()),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["books not returned"],
+      });
+    },
+  });
+
+  let [errorState, setErrorState] = useState<studentFormErrorMessages>({
     roll_no: false,
     first_name: false,
     middle_name: false,
@@ -73,7 +113,7 @@ const Intro = () => {
 
   let ifFirstNameIsEmpty = (
     text: string,
-    clonedStateObject: formErrorMessages
+    clonedStateObject: studentFormErrorMessages
   ) => {
     if (text === "") {
       clonedStateObject.first_name = true;
@@ -86,7 +126,7 @@ const Intro = () => {
 
   let ifLastNameIsEmpty = (
     text: string,
-    clonedStateObject: formErrorMessages
+    clonedStateObject: studentFormErrorMessages
   ) => {
     if (text === "") {
       clonedStateObject.last_name = true;
@@ -133,6 +173,35 @@ const Intro = () => {
     mut_op({ ...object_to_send, roll_no: student_roll });
   };
 
+  let file_for_return = (event: FormEvent): undefined => {
+    event.preventDefault();
+    let submit_time = new Date().toISOString();
+    let data = new FormData(event.target as HTMLFormElement);
+    const object_to_send = {};
+    data.forEach((value, key) => (object_to_send[key] = value));
+
+    if (Object.values(object_to_send).length === 0) {
+      alert("The form won't submit unless one item is checked!");
+      return;
+    }
+
+    const lets_test = structuredClone(books_not_returned);
+
+    for (const ids in object_to_send) {
+      let id = Number(ids);
+      for (const items of lets_test) {
+        if (items.id !== id) {
+          continue;
+        } else if (items.id === id) {
+          items.has_returned = true;
+          items.return_date = submit_time;
+        }
+      }
+    }
+    let things_to_send = lets_test.filter((joe) => joe.has_returned);
+    Promise.all(things_to_send.map((t) => mark_as_returned_mut(t)));
+  };
+
   return (
     <>
       {isPending && <p>Pending</p>}
@@ -156,7 +225,11 @@ const Intro = () => {
         {errorState.first_name ? <p>please write the first name</p> : null}
         <label>
           First Name
-          <input type="text" name={STUDENT_FORM.FIRST_NAME_FIELD} ref={first_name_field} />
+          <input
+            type="text"
+            name={STUDENT_FORM.FIRST_NAME_FIELD}
+            ref={first_name_field}
+          />
         </label>
         <label>
           Middle Name
@@ -181,8 +254,43 @@ const Intro = () => {
       <button onClick={() => mut_delete()}>Delete</button>
       {is_delete_pending && <p>Pending</p>}
       {is_delete_error && <p>{delete_error.message}</p>}
+      <hr />
+      <p className={styles.edit}>
+        <strong>
+          <em>Books not returned by student</em>
+        </strong>
+      </p>
+      {is_books_notreturn_pending && <p>Pending ...</p>}
+      {is_books_notreturn_err && <p>{books_not_returned_error.message}</p>}
+      <form onSubmit={file_for_return}>
+        {is_books_notreturn_passed &&
+          !is_mark_as_returned_pending &&
+          books_not_returned.length > 0 &&
+          books_not_returned.map((book) => (
+            <div>
+              <label key={book.book_id.book_id}>
+                Title - {book.book_id.title}, Author - {book.book_id.author}
+                <input type="checkbox" name={`${book.id}`} />
+              </label>
+            </div>
+          ))}
+        {is_mark_as_returned_pending && (
+          <p>
+            Pending ... This is an expensive computation so it might take some
+            time.
+          </p>
+        )}
+        {is_mark_as_returned_err && <p>{mark_as_returned_err.message}</p>}
+        {is_mark_as_returned_passed && <p>Edited !!</p>}
+        <button type="submit">Submit</button>
+      </form>
+      {is_books_notreturn_passed && books_not_returned.length === 0 && (
+        <p>The student has returned all books</p>
+      )}
     </>
   );
 };
+// AccountLogs - Table of all transactions of books
+// contains student info, book info, taken from library date, due date(optional), has returned, return date(have to implement),
 
 export { Intro };

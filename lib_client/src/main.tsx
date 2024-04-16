@@ -5,6 +5,8 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Student } from "./components/student/Student.js";
 import { Intro } from "./components/intro/Intro.js";
+import { Book } from "./components/book/Book.js";
+import { BookDetail } from "./components/book/BookDetail.js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const router = createBrowserRouter([
@@ -19,6 +21,14 @@ const router = createBrowserRouter([
       {
         path: "/details/students/:student_roll",
         element: <Intro />
+      },
+      {
+        path: "/details/books",
+        element: <Book />
+      },
+      {
+        path: "/details/books/:book_id",
+        element: <BookDetail />
       }
     ],
   },
@@ -40,3 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 // 4. text search, mandatory
 // 5. pagination, mandatory
 // 6. authentication
+
+
+// 2pm pump+reservoir
+// bhaat

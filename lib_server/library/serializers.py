@@ -12,6 +12,7 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class AccountLogsSerializer(serializers.ModelSerializer):
+    book_id = BookSerializer(many = False, read_only = True)
     class Meta:
         model = AccountLogs
         fields = "__all__"

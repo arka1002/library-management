@@ -5,13 +5,43 @@ type Student = {
     last_name: number;
 }
 
+type Book = {
+    book_id: number;
+    title: string;
+    author: string;
+};
+
+type BookList = Book[];
+
 type ListOfStudents = Array<Student>;
 
-type formErrorMessages = {
+type studentFormErrorMessages = {
     roll_no: boolean;
     first_name: boolean;
     middle_name: boolean;
     last_name: boolean;
 };
 
-export { type ListOfStudents, type formErrorMessages, type Student };
+type BookFormErrorMessages = {
+    book_id: boolean;
+    title: boolean;
+    author: boolean;
+};
+
+type Books_not_returned = {
+    id: number;
+    book_id: {
+        book_id: string;
+        title: string;
+        author: string;
+    };
+    checked_out: string;
+    due_date: string;
+    has_returned: boolean;
+    return_date: null | string;
+    roll_no: string;
+};
+
+type Books_not_returned_list = Books_not_returned[];
+
+export { type ListOfStudents, type studentFormErrorMessages, type Student, type BookList, type BookFormErrorMessages, type Book, type Books_not_returned, type Books_not_returned_list };

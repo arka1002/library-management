@@ -30,7 +30,9 @@ class AccountLogs(models.Model):
     roll_no = models.ForeignKey(Student, on_delete=models.CASCADE)
     # https://docs.djangoproject.com/en/5.0/ref/models/fields/#datetimefield
     checked_out = models.DateTimeField()
-    due_date = models.DateTimeField()
+    due_date = models.DateTimeField(blank=True)
+    has_returned = models.BooleanField()
+    return_date = models.DateTimeField(blank=True, null=True)
 
     # implement a function like - https://docs.djangoproject.com/en/5.0/intro/tutorial02/#id5
     # see - https://docs.python.org/3/library/datetime.html#module-datetime

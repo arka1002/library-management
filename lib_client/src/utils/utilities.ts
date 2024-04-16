@@ -5,4 +5,10 @@ const STUDENT_FORM = {
     LAST_NAME_FIELD: 'last_name',
 };
 
-export { STUDENT_FORM };
+const BOOK_FORM = {
+    BOOK_ID_FIELD: "book_id",
+    AUTHOR_FIELD: "author",
+    TITLE_FIELD: "title",
+};
+
+export { STUDENT_FORM, BOOK_FORM };

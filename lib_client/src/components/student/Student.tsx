@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type ListOfStudents,
-  type formErrorMessages,
+  type studentFormErrorMessages,
 } from "../../utils/types.js";
 import { STUDENT_FORM } from "../../utils/utilities.js";
 import styles from "./Student.module.css";
@@ -49,7 +49,7 @@ const Student = () => {
   });
 
   // error states
-  let [errorState, setErrorState] = useState<formErrorMessages>({
+  let [errorState, setErrorState] = useState<studentFormErrorMessages>({
     roll_no: false,
     first_name: false,
     middle_name: false,
@@ -58,7 +58,7 @@ const Student = () => {
 
   let ifRollNoIsEmpty = (
     text: string,
-    clonedStateObject: formErrorMessages
+    clonedStateObject: studentFormErrorMessages
   ) => {
     if (text === "") {
       clonedStateObject.roll_no = true;
@@ -71,7 +71,7 @@ const Student = () => {
 
   let ifFirstNameIsEmpty = (
     text: string,
-    clonedStateObject: formErrorMessages
+    clonedStateObject: studentFormErrorMessages
   ) => {
     if (text === "") {
       clonedStateObject.first_name = true;
@@ -84,7 +84,7 @@ const Student = () => {
 
   let ifLastNameIsEmpty = (
     text: string,
-    clonedStateObject: formErrorMessages
+    clonedStateObject: studentFormErrorMessages
   ) => {
     if (text === "") {
       clonedStateObject.last_name = true;
@@ -146,7 +146,7 @@ const Student = () => {
       {isError ? <p>{student_list_error.message}</p> : null}
       {isSuccess
         ? student_list.map((item) => (
-            <div className={styles.singleRow} id={`${item.roll_no}`}>
+            <div className={styles.singleRow} key={item.roll_no}>
               <div>{item.roll_no}</div>
               <div>
                 <NavLink to={`/details/students/${item.roll_no}`}>
