@@ -287,6 +287,11 @@ const Intro = () => {
       {is_books_notreturn_passed && books_not_returned.length === 0 && (
         <p>The student has returned all books</p>
       )}
+      <p className={styles.edit}>
+        <strong>
+          <em>Add books taken by the student</em>
+        </strong>
+      </p>
     </>
   );
 };
