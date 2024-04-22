@@ -20,4 +20,5 @@ urlpatterns = [
     path("details/books/<int:book_id>/", views.homepage_v4, name = "details of a book html"),
     path("list/account/not-returned/<int:roll_no>/", views.books_not_returned_by_student, name = "Books not returned by a student"),
     path("list/account/returned/", views.mark_books_as_returned_by_students, name="mark as returned"),
+    path("list/account/add/", views.add_log, name="add log"),
 ]

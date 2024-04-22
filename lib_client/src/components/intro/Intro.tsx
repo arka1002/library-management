@@ -4,10 +4,11 @@ import {
   type studentFormErrorMessages,
   type Student,
   type Books_not_returned_list,
+  type mark_as_ret_err_messages,
 } from "../../utils/types.js";
 import styles from "./Intro.module.css";
 import { FormEvent, useRef, useState } from "react";
-import { STUDENT_FORM } from "../../utils/utilities.js";
+import { NEW_LOG, STUDENT_FORM } from "../../utils/utilities.js";
 
 const Intro = () => {
   // useQueryClient hook
@@ -104,12 +105,81 @@ const Intro = () => {
     },
   });
 
+  let bar = useMutation({
+    mutationFn: (body: any) =>
+      fetch("/list/account/add/", {
+        method: "POST",
+        body: JSON.stringify(body),
+      })
+        .then((res) => {
+          if (res.status === 400) {
+            throw new Error("Book doesn't exist. Please check the Book ID once again.") // lets try...
+          } else {
+            return res.text();
+          }
+        })
+        .catch((err) => {
+          throw new Error(err);
+        }),
+    onError: (err) => {
+      alert(err.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["books not returned"],
+      });
+    },
+  });
+
   let [errorState, setErrorState] = useState<studentFormErrorMessages>({
     roll_no: false,
     first_name: false,
     middle_name: false,
     last_name: false,
   });
+
+  let [returnState, setReturnState] = useState<mark_as_ret_err_messages>({
+    roll_no: false,
+    book_id: false,
+    checked_out: false,
+    due_date: false,
+  });
+  let ifBookIdIsEmpty = (
+    text: string,
+    clonedStateObject: mark_as_ret_err_messages
+  ) => {
+    if (text === "") {
+      clonedStateObject.book_id = true;
+      setReturnState(clonedStateObject);
+      return;
+    }
+    clonedStateObject.book_id = false;
+    setReturnState(clonedStateObject);
+  };
+  let ifCheckedOutIsEmpty = (
+    text: string,
+    clonedStateObject: mark_as_ret_err_messages
+  ) => {
+    if (text === "") {
+      clonedStateObject.checked_out = true;
+      setReturnState(clonedStateObject);
+      return;
+    }
+    clonedStateObject.checked_out = false;
+    setReturnState(clonedStateObject);
+  };
+  let ifDueDateIsEmpty = (
+    text: string,
+    clonedStateObject: mark_as_ret_err_messages
+  ) => {
+    if (text === "") {
+      clonedStateObject.due_date = true;
+      setReturnState(clonedStateObject);
+      return;
+    }
+    clonedStateObject.due_date = false;
+    setReturnState(clonedStateObject);
+  };
 
   let ifFirstNameIsEmpty = (
     text: string,
@@ -200,6 +270,37 @@ const Intro = () => {
     }
     let things_to_send = lets_test.filter((joe) => joe.has_returned);
     Promise.all(things_to_send.map((t) => mark_as_returned_mut(t)));
+  };
+  let new_log_handler = (event: FormEvent) => {
+    event.preventDefault();
+    const data = new FormData(event.target as HTMLFormElement);
+    if (
+      (data.get(NEW_LOG.BOOK_ID_FIELD) as string).trim() === "" ||
+      (data.get(NEW_LOG.CHECKED_OUT) as string).trim() === "" ||
+      (data.get(NEW_LOG.DUE_DATE) as string).trim() === ""
+      /* if the fields are empty ....... */
+    ) {
+      let foosh = structuredClone(returnState);
+      ifBookIdIsEmpty(
+        (data.get(NEW_LOG.BOOK_ID_FIELD) as string).trim(),
+        foosh
+      );
+      ifCheckedOutIsEmpty(
+        (data.get(NEW_LOG.CHECKED_OUT) as string).trim(),
+        foosh
+      );
+      ifDueDateIsEmpty((data.get(NEW_LOG.DUE_DATE) as string).trim(), foosh);
+      return;
+    }
+    const object_to_send = {};
+    data.forEach((value, key) => (object_to_send[key] = value));
+    object_to_send["roll_no"] = student_roll;
+    object_to_send["has_returned"] = false;
+    // date conversions to iso strings .....
+
+    object_to_send[NEW_LOG.CHECKED_OUT] = (new Date(object_to_send[NEW_LOG.CHECKED_OUT])).toISOString();
+    object_to_send[NEW_LOG.DUE_DATE] = (new Date(object_to_send[NEW_LOG.DUE_DATE])).toISOString();
+    bar.mutate(object_to_send);
   };
 
   return (
@@ -292,6 +393,31 @@ const Intro = () => {
           <em>Add books taken by the student</em>
         </strong>
       </p>
+      <form
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "20px",
+        }}
+        onSubmit={new_log_handler}
+      >
+        {returnState.book_id && <p>Please write Book ID</p>}
+        <label>
+          Book ID
+          <input type="text" name={NEW_LOG.BOOK_ID_FIELD} />
+        </label>
+        {returnState.checked_out && <p>Please write checked out date</p>}
+        <label>
+          Checked Out
+          <input type="datetime-local" name={NEW_LOG.CHECKED_OUT} />
+        </label>
+        {returnState.due_date && <p>Please write due date</p>}
+        <label>
+          Due Date
+          <input type="datetime-local" name={NEW_LOG.DUE_DATE} />
+        </label>
+        <button type="submit">Submit</button>
+      </form>
     </>
   );
 };

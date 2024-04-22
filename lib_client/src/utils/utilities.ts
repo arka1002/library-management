@@ -11,4 +11,11 @@ const BOOK_FORM = {
     TITLE_FIELD: "title",
 };
 
-export { STUDENT_FORM, BOOK_FORM };
+const NEW_LOG = {
+    BOOK_ID_FIELD: BOOK_FORM.BOOK_ID_FIELD,
+    STUD_ROLL_FIELD: STUDENT_FORM.ROLL_NO_FIELD,
+    CHECKED_OUT: "checked_out",
+    DUE_DATE: "due_date",
+};
+
+export { STUDENT_FORM, BOOK_FORM, NEW_LOG };

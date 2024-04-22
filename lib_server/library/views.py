@@ -1,7 +1,7 @@
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render
 from .models import Student, Book, AccountLogs
-from .serializers import StudentSerializer, BookSerializer, AccountLogsSerializer
+from .serializers import StudentSerializer, BookSerializer, AccountLogsSerializer, AccountLogsSerializer_v2
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
@@ -55,6 +55,16 @@ def add_book(request):
             return JsonResponse(serializer.data, status = 201)
         return JsonResponse(serializer.errors, status = 400)
 
+@csrf_exempt
+def add_log(request):
+    if request.method == "POST":
+        data = JSONParser().parse(request)
+        serializer = AccountLogsSerializer_v2(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status = 201)
+        return JsonResponse(serializer.errors, status = 400)
+
 
 @csrf_exempt
 def update_student(request, student_id):
@@ -102,7 +112,6 @@ def mark_books_as_returned_by_students(request):
     #     serializer.save()
     #     return JsonResponse(serializer.data)
 
-    print(data)
     try:
         acc = AccountLogs.objects.get(id = data["id"])
     except AccountLogs.DoesNotExist:

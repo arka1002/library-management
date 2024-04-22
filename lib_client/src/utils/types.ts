@@ -22,6 +22,13 @@ type studentFormErrorMessages = {
     last_name: boolean;
 };
 
+type mark_as_ret_err_messages = {
+    book_id: boolean;
+    roll_no: boolean;
+    checked_out: boolean;
+    due_date: boolean;
+};
+
 type BookFormErrorMessages = {
     book_id: boolean;
     title: boolean;
@@ -44,4 +51,4 @@ type Books_not_returned = {
 
 type Books_not_returned_list = Books_not_returned[];
 
-export { type ListOfStudents, type studentFormErrorMessages, type Student, type BookList, type BookFormErrorMessages, type Book, type Books_not_returned, type Books_not_returned_list };
+export { type ListOfStudents, type studentFormErrorMessages, type Student, type BookList, type BookFormErrorMessages, type Book, type Books_not_returned, type Books_not_returned_list, type mark_as_ret_err_messages };

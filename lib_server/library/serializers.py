@@ -16,3 +16,9 @@ class AccountLogsSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountLogs
         fields = "__all__"
+
+
+class AccountLogsSerializer_v2(serializers.ModelSerializer):
+    class Meta:
+        model = AccountLogs
+        fields = "__all__"
