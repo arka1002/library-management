@@ -8,7 +8,7 @@ import {
 } from "../../utils/types.js";
 import styles from "./Intro.module.css";
 import { FormEvent, useRef, useState } from "react";
-import { NEW_LOG, STUDENT_FORM } from "../../utils/utilities.js";
+import { NEW_LOG, STUDENT_FORM, diffDate } from "../../utils/utilities.js";
 
 const Intro = () => {
   // useQueryClient hook
@@ -29,6 +29,7 @@ const Intro = () => {
       fetch(`/list/students/${student_roll}`).then((res) => res.json()),
   });
   const first_name_field = useRef<HTMLInputElement | null>(null);
+  const book_id_field = useRef<HTMLInputElement | null>(null);
 
   const {
     isPending: is_edit_pending,
@@ -105,7 +106,13 @@ const Intro = () => {
     },
   });
 
-  let bar = useMutation({
+  let {
+    isPending: is_add_acc_pending,
+    isSuccess: is_add_acc_success,
+    isError: is_add_acc_err,
+    error: add_acc_error,
+    mutate: mut_add_acc,
+  } = useMutation({
     mutationFn: (body: any) =>
       fetch("/list/account/add/", {
         method: "POST",
@@ -113,7 +120,9 @@ const Intro = () => {
       })
         .then((res) => {
           if (res.status === 400) {
-            throw new Error("Book doesn't exist. Please check the Book ID once again.") // lets try...
+            throw new Error(
+              "Book doesn't exist. Please check the Book ID once again."
+            ); // lets try...
           } else {
             return res.text();
           }
@@ -128,6 +137,9 @@ const Intro = () => {
       queryClient.invalidateQueries({
         queryKey: ["books not returned"],
       });
+      let formy = book_id_field.current.parentNode.parentNode as HTMLFormElement;
+      formy.reset();
+      book_id_field.current.focus();
     },
   });
 
@@ -298,9 +310,13 @@ const Intro = () => {
     object_to_send["has_returned"] = false;
     // date conversions to iso strings .....
 
-    object_to_send[NEW_LOG.CHECKED_OUT] = (new Date(object_to_send[NEW_LOG.CHECKED_OUT])).toISOString();
-    object_to_send[NEW_LOG.DUE_DATE] = (new Date(object_to_send[NEW_LOG.DUE_DATE])).toISOString();
-    bar.mutate(object_to_send);
+    object_to_send[NEW_LOG.CHECKED_OUT] = new Date(
+      object_to_send[NEW_LOG.CHECKED_OUT]
+    ).toISOString();
+    object_to_send[NEW_LOG.DUE_DATE] = new Date(
+      object_to_send[NEW_LOG.DUE_DATE]
+    ).toISOString();
+    mut_add_acc(object_to_send);
   };
 
   return (
@@ -404,7 +420,7 @@ const Intro = () => {
         {returnState.book_id && <p>Please write Book ID</p>}
         <label>
           Book ID
-          <input type="text" name={NEW_LOG.BOOK_ID_FIELD} />
+          <input type="text" name={NEW_LOG.BOOK_ID_FIELD} ref={book_id_field} />
         </label>
         {returnState.checked_out && <p>Please write checked out date</p>}
         <label>
@@ -416,8 +432,60 @@ const Intro = () => {
           Due Date
           <input type="datetime-local" name={NEW_LOG.DUE_DATE} />
         </label>
-        <button type="submit">Submit</button>
+        <div></div>
+        <button
+          type="submit"
+          style={{
+            gridColumnStart: "1",
+            gridColumnEnd: "3",
+          }}
+        >
+          Submit
+        </button>
       </form>
+      {is_add_acc_err && (
+        <p style={{ color: "red", textAlign: "center" }}>
+          {add_acc_error.message}
+        </p>
+      )}
+      {is_add_acc_success && (
+        <p style={{ color: "green", textAlign: "center" }}>Added!</p>
+      )}
+      {is_add_acc_pending && <p>Pending...</p>}
+      <hr />
+      <p className={styles.edit}>
+        <strong>
+          <em>Add books taken by the student</em>
+        </strong>
+      </p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr",
+        }}
+      >
+        <div>Book ID</div>
+        <div>Book Title</div>
+        <div>Checked Out Date</div>
+        <div>Due Date</div>
+        <div>Due Amount</div>
+        {is_books_notreturn_passed &&
+          !is_mark_as_returned_pending &&
+          books_not_returned.length > 0 &&
+          books_not_returned.map((book) => (
+            <>
+              <div>{book.book_id.book_id}</div>
+              <div>{book.book_id.title}</div>
+              <div>{`${new Date(book.checked_out).getDate()} - ${
+                new Date(book.checked_out).getMonth() + 1
+              } - ${new Date(book.checked_out).getFullYear()}`}</div>
+              <div>{`${new Date(book.due_date).getDate()} - ${
+                new Date(book.due_date).getMonth() + 1
+              } - ${new Date(book.due_date).getFullYear()}`}</div>
+              <div>{`${diffDate(new Date(book.due_date)) * 2}`}</div>
+            </>
+          ))}
+      </div>
     </>
   );
 };

@@ -18,4 +18,17 @@ const NEW_LOG = {
     DUE_DATE: "due_date",
 };
 
-export { STUDENT_FORM, BOOK_FORM, NEW_LOG };
+const diffDate = (due_date: Date | any) => {
+    if (due_date > new Date()) {
+        // if due date is in future ... don't charge
+        return 0;
+    } else {
+        const today = new Date();
+        const diffTime = Math.abs(today as any - due_date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    }
+
+};
+
+export { STUDENT_FORM, BOOK_FORM, NEW_LOG, diffDate };
